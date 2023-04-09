@@ -1,0 +1,17 @@
+body{
+    font-family: sans-serif;
+    font-size: 24px;
+    margin: 0%;
+    color: aquamarine;
+}
+.content{
+    margin-left: 35%;
+}
+
+table {
+    border: 1px solid black;
+}
+th, td {
+    border: 1px solid black;
+    padding: 5px;
+}
