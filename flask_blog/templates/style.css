@@ -1,0 +1,31 @@
+
+body {
+    background-image: url('back.jpg');
+    background-repeat: no-repeat;
+  }
+
+
+
+abbr,p{
+display:inline;
+background-color: aqua;
+font-family: Lucida Sans;
+font-size: x-large;
+font-style: oblique;
+}
+a:link{
+color: #000;
+font-size: x-large;
+}
+a:visited{
+color:green;
+background-color: transparent;
+}
+a:hover{
+color:lightcoral;
+background-color: transparent;
+}
+a:active{
+color:aquamarine;
+background-color: transparent;
+}
