@@ -107,7 +107,7 @@ def login():
                 token1 = jwt.encode(
                     {
                         "user": new_data["email"],
-                        "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=100),
+                        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=3),
                     },
                     app.config["SECRET_KEY"],
                 )
@@ -162,6 +162,7 @@ def create_user():
             "username": req_data["username"],
             "email": req_data["email"],
             "password": req_data["password"],
+            "admin":req_data["admin"]
         
         }
         role=request.json.get('role',None)
@@ -203,9 +204,21 @@ def create_user():
 
         conn = None
         password_hash = bcrypt.generate_password_hash(new_data["password"]).decode("utf-8")
-
+        
         try:
-            if role=='users':
+            role=request.json.get('role',None)
+            cur.execute(
+            "SELECT id FROM users WHERE username = %s",
+            (new_data["admin"],),
+            )
+              
+            result = cur.fetchone()
+            if result is None:
+                  return (
+                    jsonify(message="Access is only for Admin!"),
+                    401,
+                    )
+            elif role=='users':
               
               cur.execute(
                 "SELECT id FROM users WHERE email = %s",
@@ -238,7 +251,7 @@ def create_user():
                   return jsonify(message="email already exists"), 409
                  else:
                   cur.execute(
-                 "INSERT INTO employee (emp_name, email, password) VALUES (%s, %s, %s)",
+                 "INSERT INTO employee (username, email, password) VALUES (%s, %s, %s)",
                   (
                     new_data["username"],
                     new_data["email"],
@@ -257,7 +270,7 @@ def create_user():
                   return jsonify(message="email already exists"), 409
                 else:
                   cur.execute(
-                "INSERT INTO manager (manager_name, email, password) VALUES (%s, %s, %s)",
+                "INSERT INTO manager (username, email, password) VALUES (%s, %s, %s)",
                 (
                     new_data["username"],
                     new_data["email"],
@@ -275,29 +288,6 @@ def create_user():
         return jsonify(message="Invalid method"), 405
 
 
-@app.route("/index", methods=["POST"])
-def index():
-    cursor = get_cursor()
-    req_data = request.get_json()
-    if request.method == "POST":
-        new_data = {
-                    "manager_name":req_data["manager_name"]}
-
-
-        try:
-            cursor.execute(
-                "INSERT INTO employee (manager_name) VALUES (%s)",
-                (new_data["manager_name"]),
-            )
-            get_db().commit()
-            return jsonify(message="content added successful"), 405
-            # return redirect("/index/")
-        except:
-            return jsonify(message="there was a problem adding that row")
-    else:
-        cursor.execute("SELECT * FROM curd")
-        tasks = [{"id": task[0], "content": task[1]} for task in cursor.fetchall()]
-        return render_template("index.html", tasks=tasks)
 
 
 @app.route("/user", methods=["DELETE"])
@@ -305,7 +295,7 @@ def delete():
     cursor = get_cursor()
     req_data = request.get_json()
     token = request.headers.get("Authorization")
-
+    role=request.json.get('role',None)
     if request.method == "DELETE":
         new_data = {"admin":req_data["admin"],
             "id": req_data["id"]}
@@ -328,10 +318,26 @@ def delete():
                     jsonify(message="Access is only for Admin!"),
                     401,
                    )
-                else:
+                if role=='users':
+                     cursor.execute("SELECT username,email,password,token from manager WHERE id=%s", (new_data["id"],))
+                     result=cursor.fetchone()
+                     print(result[0])
+                     cursor.execute(
+                           "INSERT INTO users (username,email,password,token) VALUES (%s, %s, %s,%s)",
+                           (
+                           result[0],
+                           result[1],
+                           result[2],
+                           result[3]
+                           ),
+                           )
+                     get_db().commit()
+                     
+                      
                      cursor.execute("DELETE FROM employee WHERE id=%s", (new_data["id"],))
                      get_db().commit()
                      return jsonify(message="Content deleted successfully"), 200
+                           
     except jwt.ExpiredSignatureError:
         return (
             jsonify(message="Your token has expired. Please login again."),
@@ -350,6 +356,7 @@ def admin():
     cursor = get_cursor()
     req_data = request.get_json()
     token = request.headers.get("Authorization")
+    role=request.json.get('role',None)
     if request.method == "PATCH":
         new_data = {
             "admin":req_data["admin"],
@@ -370,19 +377,25 @@ def admin():
                 )
               
                 result = cursor.fetchone()
+                cursor.execute(
+                "SELECT id FROM manager WHERE manager_name = %s",
+                (new_data["manager_name"],),
+                )
+                result1=cursor.fetchone()
 
                 if result is None:
                   return (
                     jsonify(message="Access is only for Admin!"),
                     401,
                    )
-                else:
+                if result1:
                     cursor.execute(
                     "UPDATE employee SET manager_name=%s WHERE emp_name=%s",
                     (new_data["manager_name"], new_data["username"]),
                      )
                     get_db().commit()
                     return jsonify(message="updated successfully")
+                else:return jsonify(message="manager is not there")
 
         except jwt.ExpiredSignatureError:
             return (
@@ -398,6 +411,57 @@ def admin():
         # fmt:off
         tasks = [{"id": task[0], "content": task[1]} for task in cursor.fetchall()]
         # fmt:on
+        return render_template("update.html", tasks=tasks)
+    
+@app.route("/user", methods=["PATCH"])
+def update():
+    cursor = get_cursor()
+    req_data = request.get_json()
+    token = request.headers.get('Authorization')
+    role=request.json.get('role',None)
+    if request.method == "PATCH":
+        new_data = {
+            'admin':req_data['admin'],
+            'username': req_data['username'],
+            'id':req_data['id']}
+        if not token:
+           return jsonify({'message': 'Token is missing!'}), 401
+        try:
+            if jwt.decode(token.split(" ")[1], app.config['SECRET_KEY'], algorithms=['HS256']):
+                cursor.execute(
+                "SELECT id FROM users WHERE username = %s",
+                (new_data["admin"],),
+                )
+              
+                result = cursor.fetchone()
+
+                if result is None:
+                  return (
+                    jsonify(message="Access is only for Admin!"),
+                    401,
+                   )
+               
+                if role=='employee':
+                    cursor.execute("UPDATE employee SET username=%s WHERE id=%s", (new_data['username'], new_data['id']))
+                    get_db().commit()
+                    return jsonify(message="updated successfully")
+                elif role=='manager':
+                    cursor.execute("UPDATE manager SET username=%s WHERE id=%s", (new_data['username'], new_data['id']))
+                    get_db().commit()
+                    return jsonify(message="updated successfully")
+
+                
+
+           
+        except jwt.ExpiredSignatureError:
+           return jsonify(message="Your token has expired. Please login again."), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'message':token}), 401
+        else:
+            return jsonify(message= "update have error")
+    else:
+        cursor.execute("SELECT * FROM curd")
+        tasks = [{"id": task[0], "content": task[1]} for task in cursor.fetchall()]
         return render_template("update.html", tasks=tasks)
 
 
