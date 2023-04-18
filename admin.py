@@ -378,7 +378,7 @@ def admin():
               
                 result = cursor.fetchone()
                 cursor.execute(
-                "SELECT id FROM manager WHERE manager_name = %s",
+                "SELECT id FROM manager WHERE username = %s",
                 (new_data["manager_name"],),
                 )
                 result1=cursor.fetchone()
@@ -390,7 +390,7 @@ def admin():
                    )
                 if result1:
                     cursor.execute(
-                    "UPDATE employee SET manager_name=%s WHERE emp_name=%s",
+                    "UPDATE employee SET manager_name=%s WHERE username=%s",
                     (new_data["manager_name"], new_data["username"]),
                      )
                     get_db().commit()
@@ -463,6 +463,72 @@ def update():
         cursor.execute("SELECT * FROM curd")
         tasks = [{"id": task[0], "content": task[1]} for task in cursor.fetchall()]
         return render_template("update.html", tasks=tasks)
+    
+
+@app.route("/joins", methods=["PATCH"])
+def joins():
+    cursor = get_cursor()
+    req_data = request.get_json()
+    token = request.headers.get('Authorization')
+    role=request.json.get('role',None)
+    if request.method == "PATCH":
+        new_data = {
+            'admin':req_data['admin'],
+            'username': req_data['username'],
+            }
+        if not token:
+           return jsonify({'message': 'Token is missing!'}), 401
+        try:
+            if jwt.decode(token.split(" ")[1], app.config['SECRET_KEY'], algorithms=['HS256']):
+                cursor.execute(
+                "SELECT id FROM users WHERE username = %s",
+                (new_data["admin"],),
+                )
+              
+                result = cursor.fetchone()
+
+                if result is None:
+                  return (
+                    jsonify(message="Access is only for Admin!"),
+                    401,
+                   )
+               
+                
+                cursor.execute("SELECT username,email FROM employee WHERE manager_name=%s", (new_data['username'],))
+                users=cursor.fetchall()
+                cursor.execute("SELECT e.username,e.email,m.username,m.email from employee as e join manager as m on e.manager_name=%s",(new_data['username'],))
+                user_details1 = []
+                users=cursor.fetchall()
+                for user in users:
+                  user_details1.append(
+                 { 
+                 "employee_username": user[0], 
+                 "employee_email": user[1],
+                 "manager_username": user[2],
+                 "manager_email": user[3]
+                 })
+
+                return jsonify(user_details1)
+                
+                # user_details = []
+                # for user in users:
+                #    user_details.append(
+                #    { "username": user[0], "email": user[1]})
+
+                # return jsonify(user_details)
+                
+                
+                    
+
+        except jwt.ExpiredSignatureError:
+           return jsonify(message="Your token has expired. Please login again."), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'message':token}), 401
+        else:
+            return jsonify(user_details1)
+    else:
+        
+        return render_template(message= "update have error")
 
 
 if __name__ == "__main__":
