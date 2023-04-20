@@ -251,7 +251,7 @@ def create_user():
                   return jsonify(message="email already exists"), 409
                  else:
                   cur.execute(
-                 "INSERT INTO employee (username, email, password) VALUES (%s, %s, %s)",
+                 f"INSERT INTO {role} (username, email, password) VALUES (%s, %s, %s)",
                   (
                     new_data["username"],
                     new_data["email"],
@@ -470,12 +470,28 @@ def joins():
     cursor = get_cursor()
     req_data = request.get_json()
     token = request.headers.get('Authorization')
-    role=request.json.get('role',None)
+    search=request.json.get('search',None)
     if request.method == "PATCH":
         new_data = {
             'admin':req_data['admin'],
             'username': req_data['username'],
             }
+        user_details = []
+        user_details2 = []
+        if search=='name':
+                cursor.execute("SELECT username,email FROM employee WHERE username=%s", (new_data['username'],))
+                users=cursor.fetchall()
+                for user in users:
+                    user_details.append(
+                    { "username": user[0], "email": user[1]})
+                return jsonify(user_details), 401
+        elif search=='employee':
+                    cursor.execute("SELECT username,email from employee")
+                    users=cursor.fetchall()
+                    for user in users:
+                       user_details2.append(
+                       { "username": user[0], "email": user[1]})
+                    return jsonify(user_details2), 401
         if not token:
            return jsonify({'message': 'Token is missing!'}), 401
         try:
@@ -492,29 +508,30 @@ def joins():
                     jsonify(message="Access is only for Admin!"),
                     401,
                    )
-               
-                
-                cursor.execute("SELECT username,email FROM employee WHERE manager_name=%s", (new_data['username'],))
-                users=cursor.fetchall()
-                cursor.execute("SELECT e.username,e.email,m.username,m.email from employee as e join manager as m on e.manager_name=%s",(new_data['username'],))
                 user_details1 = []
-                users=cursor.fetchall()
-                for user in users:
-                  user_details1.append(
-                 { 
-                 "employee_username": user[0], 
-                 "employee_email": user[1],
-                 "manager_username": user[2],
-                 "manager_email": user[3]
-                 })
+                if search=='reporting_team':
+                    cursor.execute("SELECT e.username,e.email,m.username,m.email from employee as e join manager as m on e.manager_name=%s",(new_data['username'],))
+                    users=cursor.fetchall()
+                    for user in users:
+                        user_details1.append(
+                        { 
+                        "employee_username": user[0], 
+                        "employee_email": user[1],
+                        "manager_username": user[2],
+                        "manager_email": user[3]
+                        })
+             
+                elif search=='manager':
+                    cursor.execute("SELECT username,email from manager")
+                    users=cursor.fetchall()
+                    for user in users:
+                       user_details1.append(
+                       { "username": user[0], "email": user[1]})
 
                 return jsonify(user_details1)
                 
-                # user_details = []
-                # for user in users:
-                #    user_details.append(
-                #    { "username": user[0], "email": user[1]})
-
+               
+            
                 # return jsonify(user_details)
                 
                 
