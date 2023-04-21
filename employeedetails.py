@@ -5,7 +5,6 @@ import psycopg2
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 import jwt
-from flask_jwt_extended import get_jwt_identity, jwt_required
 import datetime
 from dotenv import load_dotenv
 import os
@@ -119,6 +118,7 @@ def login():
 @app.route("/registers", methods=["POST"])
 def create_user():
     cur = get_cursor()
+    token = request.headers.get("Authorization")
     if request.method == "POST":
         req_data = request.get_json()
         if not req_data:
@@ -133,8 +133,8 @@ def create_user():
             "id": req_data["id"],
             "username": req_data["username"],
             "email": req_data["email"],
-            "password": req_data["password"],
-            "admin": req_data["admin"],
+            "password": req_data["password"]
+            
         }
         role = request.json.get("role", None)
         if len(new_data["username"]) < 5:
@@ -184,29 +184,25 @@ def create_user():
             "utf-8"
         )
         try:
-            role = request.json.get("role", None)
-            cur.execute(
-                "SELECT emp_id FROM employee_details WHERE emp_id = %s AND role = 'admin'",
-                (new_data["admin"],),
+            decode_token = jwt.decode(
+            token.split(" ")[1],
+            app.config["SECRET_KEY"],
+            algorithms=["HS256"],
             )
-            result = cur.fetchone()
-            if result is None:
-                return (
-                    jsonify(message="Access is only for Admin!"),
-                    401,
-                )
-            cur.execute(
-                "INSERT INTO employee_details (emp_id,emp_name, emp_email, password,role) VALUES (%s, %s, %s,%s,%s)",
-                (
-                    new_data["id"],
-                    new_data["username"],
-                    new_data["email"],
-                    password_hash,
-                    role,
-                ),
-            )
-            get_db().commit()
-            return jsonify(message="register successful"), 200
+
+            if decode_token["user"] == "admin":
+                    cur.execute(
+                    "INSERT INTO employee_details (emp_id,emp_name, emp_email, password,role) VALUES (%s, %s, %s,%s,%s)",
+                    (
+                        new_data["id"],
+                        new_data["username"],
+                        new_data["email"],
+                        password_hash,
+                        role,
+                    ),
+                    )
+                    get_db().commit()
+                    return jsonify(message="register successful"), 200
         finally:
             if conn is not None:
                 conn.close()
@@ -222,9 +218,9 @@ def delete():
     role = request.json.get("role", None)
     if request.method == "DELETE":
         new_data = {
-            "admin": req_data["admin"],
+          
             "id": req_data["id"],
-            "role": req_data["role"],
+            "role": req_data["role"]
         }
     if not token:
         return jsonify({"message": "Token is missing!"}), 401
@@ -274,9 +270,9 @@ def admin():
     role = request.json.get("role", None)
     if request.method == "PATCH":
         new_data = {
-            "admin": req_data["admin"],
+            # "admin": req_data["admin"],
             "userid": req_data["userid"],
-            "manager_name": req_data["manager_name"],
+            "manager_name": req_data["manager_name"]
         }
         if not token:
             return jsonify({"message": "Token is missing!"}), 401
@@ -326,9 +322,9 @@ def update():
     role = request.json.get("role", None)
     if request.method == "PATCH":
         new_data = {
-            "admin": req_data["admin"],
+           
             "username": req_data["username"],
-            "id": req_data["id"],
+            "id": req_data["id"]
         }
         if not token:
             return jsonify({"message": "Token is missing!"}), 401
@@ -363,7 +359,7 @@ def search():
         token.split(" ")[1], app.config["SECRET_KEY"], algorithms=["HS256"]
     )
     if request.method == "PATCH":
-        new_data = {"admin": req_data["admin"], "userid": req_data["userid"]}
+        new_data = { "userid": req_data["userid"]}
         user_details = []
         user_details2 = []
 
@@ -402,7 +398,7 @@ def search():
             return jsonify({"message": "Token is missing!"}), 401
         try:
             user_details1 = []
-            # current_user = get_jwt_identity()
+    
             if decoded_token["user"] == "manager":
                 cursor.execute(
                     "SELECT emp_id, emp_name, emp_email FROM employee_details WHERE reporting_id = %s",
@@ -420,13 +416,14 @@ def search():
                 return jsonify(user_details1)
                 # return jsonify({message="only manager can view this data"}), 401
 
-            elif decoded_token["user"] == "admin":
+            elif decoded_token["user"] == 'admin':
                 # print(current_user)
 
                 cursor.execute(
-                    "SELECT emp_id, emp_name, emp_email,reporting_id FROM employee_details WHERE emp_id = %s",
-                    (new_data["userid"]),
+                "SELECT e.emp_id, e.emp_name, e.emp_email, m.emp_name AS reporting_manager, e.role FROM employee_details e INNER JOIN employee_details m ON e.reporting_id = m.emp_id WHERE e.emp_id = %s",
+                (new_data["userid"],)
                 )
+
                 users = cursor.fetchall()
                 for user in users:
                     user_details1.append(
@@ -437,7 +434,7 @@ def search():
                             "manager_id": user[3],
                         }
                     )
-                    print("hi")
+                   
                 return jsonify(user_details1)
 
         except jwt.ExpiredSignatureError:
