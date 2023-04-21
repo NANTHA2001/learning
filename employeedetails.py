@@ -355,31 +355,18 @@ def search():
     cursor = get_cursor()
     req_data = request.get_json()
     token = request.headers.get("Authorization")
+    
     decoded_token = jwt.decode(
         token.split(" ")[1], app.config["SECRET_KEY"], algorithms=["HS256"]
     )
     if request.method == "PATCH":
-        new_data = { "userid": req_data["userid"]}
+        new_data = { "userid": req_data["userid"]
+                    }
         user_details = []
         user_details2 = []
 
-        if decoded_token["user"] == "name":
-            cursor.execute(
-                "SELECT emp_id,emp_name,emp_email,role FROM employee_details WHERE emp_id=%s",
-                (new_data["userid"],),
-            )
-            users = cursor.fetchall()
-            for user in users:
-                user_details.append(
-                    {
-                        "userid": user[0],
-                        "employee_name": user[1],
-                        "employee_email": user[2],
-                        "role": user[3],
-                    }
-                )
-            return jsonify(user_details), 401
-        elif decoded_token["user"] == "employee":
+        
+        if decoded_token["user"] == "employee":
             cursor.execute(
                 "SELECT emp_id,emp_name,emp_email,role FROM employee_details"
             )
@@ -436,6 +423,7 @@ def search():
                     )
                    
                 return jsonify(user_details1)
+           
 
         except jwt.ExpiredSignatureError:
             return jsonify(message="Your token has expired. Please login again."), 401
@@ -446,6 +434,31 @@ def search():
     else:
         return render_template(message="this is not patch method")
 
+@app.route("/roledetails", methods=["PATCH"])
+def roledetails():
+    cursor = get_cursor()
+    req_data = request.get_json()
+    if request.method == "PATCH":
+        new_data = { "role": req_data["role"]
+                    }
+        user_details = []
+        if (new_data["role"]=="admin" or "manager" or "employee"):
+                cursor.execute(f"SELECT emp_id, emp_name, emp_email, role FROM employee_details where role='{new_data['role']}'")
+                users = cursor.fetchall()
+                for user in users:
+                    user_details.append(
+                        {
+                            "userid": user[0],
+                            "employee_name": user[1],
+                            "employee_email": user[2],
+                            "role": user[3],
+                        }
+                    )
+                return jsonify(user_details), 401
+    else:
+        return render_template(message="this is not patch method")
+
 
 if __name__ == "__main__":
     app.run(debug=True)
+# 
