@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Resume</title>
+  <link rel="shortcut icon" href="Pic.jpg" type="image/x-icon">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css" integrity="sha512-5A8nwdMOWrSz20fDsjczgUidUBR8liPYU+WymTZP1lmY9G6Oc7HlZv156XqnsgNUzTyMefFTcsFH/tnJE/+xBg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+ 
+  <style>
+   body {
+    font-family: Arial, sans-serif;
+    width: 793px;
+   height: 1122px;
+   background-image: url('/static/resume1.jpg');
+    background-size:contain;
+ 
+    background-color: rgb(242, 248, 248);
+    border: 1px solid #131212;
+    margin-left:25%;
+
+  }
+  #time{
+    text-align: center;
+  }
+  .header {
+      display: flex;
+      align-items: center;
+      padding: 25px;
+      background-color: #333;
+      color: #fff;
+    }
+    .header h1{
+      margin: 0;
+      margin-bottom:5%;
+      margin-left: 26%;
+      font-size: 25px;
+      text-align: center;
+    }
+    img {
+      width: 150px;
+      height: 150px;
+    }
+  .header h2 {
+      margin-top: 7%;
+      margin-left: -26%;
+    font-size: 25px;
+    color: rgb(250, 242, 236);
+  }
+  section {
+    padding: 20px;
+    border-bottom: 1px solid #131212;
+    background-color: rgb(170 184 194);
+  }
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  li {
+    margin-bottom: 10px;
+    
+  }
+  .education ul {
+    margin-left: 20px;
+  }
+  .education li {
+    margin-bottom: 5px;
+  }
+
+  table, th, td {
+border: 2-px solid #202020
+}
+
+
+/* Apply a border and margin to blocks with class "block1" */
+
+.block {
+width: 50%;
+float: left;
+box-sizing: border-box;
+padding: 25px;
+background-color: #9eacb7;
+border: 1px solid #202020;
+
+}
+
+
+/* Apply a different border and font size to blocks with class "block2" */
+
+ 
+  </style>
+  <!-- <script src="login.js"></script> -->
+</head>
+<body>
+  <div id = "time"></div> 
+  <div class="header">
+    <img src="{{ url_for('static', filename='Pic.jpg') }}">
+
+    <h1><div id = "username"></div>
+    </h1>
+    <center><h2 >Nantha kumar G</h2></center>
+        
+  <!-- <h1 id="username"></h1><br><br>
+ 
+  <p id="time"></p> -->
+  
+  
+
+ 
+    
+    <!-- <h2>Software Developer</h2> -->
+  </div>
+  
+  <section class="summary">
+    <h2>Summary</h2>
+    <p>A web developer with over 5 years of experience in building responsive websites and web applications. Proficient in HTML, CSS, JavaScript, and PHP. </p>
+  </section>
+  
+  <section class="skills">
+    <h2>Skills</h2>
+    <ol>
+      <li><label for="file">HTML:</label>
+        <progress id="file" value="80" max="100"> 80% </progress></li>
+        <li><label for="file">CSS</label>
+          <progress id="file" value="75" max="100"> 75% </progress></li>
+          <li><label for="file">JavaScript</label>
+            <progress id="file" value="75" max="100"> 75% </progress></li>
+            <li><label for="file">PHP</label>
+              <progress id="file" value="50" max="100"> 50% </progress></li>
+              <li><label for="file">Bootstrap</label>
+                <progress id="file" value="50" max="100"> 50% </progress></li> 
+                <li><label for="file">jQuery</label>
+                  <progress id="file" value="40" max="100"> 40% </progress></li>
+                  <li><label for="file">react</label>
+      <progress id="file" value="40" max="100"> 40% </progress></li>
+    </ol>
+    
+  </section>
+  
+  <section class="education">
+    <h2>Education</h2>
+    <table>
+      <tr>
+        <td>University name</td>
+        <td>Starting year</td>
+        <td>Ending year</td>
+      </tr>
+      <tr>
+        <td>Sri Venkateswara college of Engneering</td>
+        <td>2019</td>
+        <td>2023</td>
+        </tr>
+        <tr>
+          <td>Sri Ayyan Vidhyashram Hrc Sec School</td>
+          <td>2018</td>
+          <td>2019</td>
+        </tr>
+        <tr>
+          <td>Unity Matriculation Hrc Sec School</td>
+          <td>2017</td>
+          <td>2018</td>
+        </tr>
+      </table>
+    </section>
+    
+    <section class="experience">
+      <h2>Experience</h2>
+      <ul>
+        <li>Web Developer, suven consultance pvt ltd(2018 - 2019)</li>
+        <ul>
+          <li>Develop and maintain company website using HTML, CSS, and JavaScript.</li>
+          <li>Collaborate with team members to implement new features and improve website functionality.</li>
+        </ul>
+        
+      </section>
+      <div class="block">
+        <h2>Contact Details</h2>
+        <ul>
+          <li><i class="fa fa-phone" aria-hidden="true"></i> 9943582199</li>
+          <li><i class="fa fa-envelope" aria-hidden="true"></i> nanthakumarg2001@gmail.com</li>
+          <li><i class="fa fa-linkedin-square" aria-hidden="true"></i><a href="https://www.linkedin.com/in/nantha-kumar-g-70b09a192"> Linkedin id:</a></li>
+        </ul>
+      </div>
+      <div class="block">
+        <h2>language knows</h2>
+    <ul>
+      <li>Tamil</li>
+      <li>English</li>
+      <li>hindi</li>
+    </ul>
+  </div>
+ <script>
+  // Get the username from the URL parameter
+  var urlParams = new URLSearchParams(window.location.search);
+  var username = urlParams.get("username");
+  // var time = urlParams.get("time");
+ 
+  // Set the username in the welcome message
+  document.getElementById("username").innerHTML = username;
+  // document.getElementById("time").innerHTML = time;
+  var date = new Date();
+  document.getElementById("time").innerHTML = date;
+  </script>
+  
+</body>
+</html>
